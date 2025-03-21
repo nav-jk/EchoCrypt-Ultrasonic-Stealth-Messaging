@@ -3,12 +3,12 @@ import sounddevice as sd
 import collections
 
 # Parameters
-fs = 22050  # Sampling rate
-symbol_duration = 0.2  # Symbol duration
-preamble_duration = 1  # Preamble duration
-preamble_freqs = [300, 500]  # Detectable preamble frequencies
-gap_duration = 0.05  # Silence between symbols
-repeated_threshold = 2  # Minimum occurrences for message validity
+fs = 22050  
+symbol_duration = 0.2  
+preamble_duration = 1  
+preamble_freqs = [300, 500]  
+gap_duration = 0.05  
+repeated_threshold = 2  
 
 # FSK Frequency Mapping (Same as Transmitter)
 freq_map = {
@@ -27,13 +27,13 @@ def record_audio(duration):
 
 def detect_preamble(audio):
     """Detects the preamble tones in the recorded audio."""
-    print("🔎 Searching for preamble...")
+    print("Searching for preamble...")
     fft = np.abs(np.fft.rfft(audio))
     freqs = np.fft.rfftfreq(len(audio), 1 / fs)
     
     detected = any(np.isclose(freqs[np.argmax(fft)], f, atol=20) for f in preamble_freqs)
     if detected:
-        print("✅ Preamble detected!")
+        print(" Preamble detected!")
     return detected
 
 def extract_frequencies(audio):
@@ -83,9 +83,9 @@ def receive_text():
     # Find the most frequently received message
     if received_messages:
         final_message = max(received_messages, key=received_messages.get)
-        print(f"✅ Final decoded message: {final_message}")
+        print(f" Final decoded message: {final_message}")
     else:
-        print("❌ No valid message received.")
+        print(" No valid message received.")
 
 # Example usage
 receive_text()
