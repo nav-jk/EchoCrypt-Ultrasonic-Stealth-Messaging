@@ -3,13 +3,13 @@ import sounddevice as sd
 import time
 
 # Parameters
-fs = 22050  # Sampling rate
-symbol_duration = 0.2  # Longer symbol duration for better clarity
-preamble_duration = 1  # Preamble duration
-preamble_freqs = [300, 500]  # Audible preamble frequencies
-repeat_count = 3  # Repeat the message multiple times
-message_amplitude = 1.0  # Maximum loudness
-gap_duration = 0.05  # Short silence between symbols
+fs = 22050  
+symbol_duration = 0.2  
+preamble_duration = 1  
+preamble_freqs = [300, 500]  
+repeat_count = 3  
+message_amplitude = 1.0  
+gap_duration = 0.05  
 
 # FSK Frequency Mapping (Lower for better audibility)
 freq_map = {
@@ -32,7 +32,7 @@ def generate_tone(frequency, duration, volume=message_amplitude, waveform="squar
 
 def transmit_preamble():
     """Transmits an alternating preamble tone."""
-    print("🔊 Transmitting preamble...")
+    print(" Transmitting preamble...")
     signal = np.concatenate([generate_tone(f, symbol_duration) for f in preamble_freqs])
     for _ in range(int(preamble_duration / (2 * symbol_duration))):
         sd.play(signal, samplerate=fs)
@@ -54,7 +54,7 @@ def transmit_text(message):
     # Convert binary into 2-bit chunks
     symbols = [binary_message[i:i+2] for i in range(0, len(binary_message), 2)]
     
-    print(f"📡 Transmitting message: {message}")
+    print(f" Transmitting message: {message}")
 
     for _ in range(repeat_count):  # Repeat message transmission
         transmit_preamble()
@@ -64,7 +64,7 @@ def transmit_text(message):
             tone = generate_tone(freq, symbol_duration, waveform="square")
             sd.play(tone, samplerate=fs)
             sd.wait()
-            time.sleep(gap_duration)  # Short silence for better clarity
+            time.sleep(gap_duration) 
 
 
 # Example usage
