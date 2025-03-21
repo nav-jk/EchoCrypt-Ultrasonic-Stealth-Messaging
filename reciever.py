@@ -1,27 +1,21 @@
 import numpy as np
 import sounddevice as sd
-import scipy.signal as signal
+import collections
 
 # Parameters
-fs = 22050  # Must match transmitter sampling rate
-symbol_duration = 0.15  # Duration per symbol
-preamble_duration = 1  # Preamble detection time
-preamble_freqs = [400, 600]  # Detect these tones
-ack_freq = 1000  # Acknowledgment signal
+fs = 22050  # Sampling rate
+symbol_duration = 0.15  # Symbol duration
+preamble_duration = 1  # Preamble duration
+preamble_freqs = [400, 600]  # Detectable preamble frequencies
+repeated_threshold = 2  # Minimum occurrences for message validity
 
-# FSK Mapping
+# FSK Frequency Mapping
 freq_map = {
     500: '00',
     700: '01',
     900: '10',
     1200: '11'
 }
-
-def generate_tone(frequency, duration, volume=100):
-    """Generates a loud sine wave of the given frequency and duration."""
-    t = np.linspace(0, duration, int(fs * duration), endpoint=False)
-    tone = volume * np.sin(2 * np.pi * frequency * t)
-    return np.column_stack((tone, tone))  # Stereo output
 
 def record_audio(duration):
     """Records audio for a given duration."""
@@ -31,7 +25,7 @@ def record_audio(duration):
     return recording.flatten()
 
 def detect_preamble(audio):
-    """Detects the preamble tones."""
+    """Detects the preamble tones in the recorded audio."""
     print("🔎 Searching for preamble...")
     fft = np.abs(np.fft.rfft(audio))
     freqs = np.fft.rfftfreq(len(audio), 1 / fs)
@@ -41,15 +35,8 @@ def detect_preamble(audio):
         print("✅ Preamble detected!")
     return detected
 
-def send_acknowledgment():
-    """Sends an ACK signal back to the transmitter."""
-    print("📡 Sending ACK...")
-    tone = generate_tone(ack_freq, 0.5)
-    sd.play(tone, samplerate=fs)
-    sd.wait()
-
 def extract_frequencies(audio):
-    """Extracts dominant frequency in each symbol duration."""
+    """Extracts dominant frequencies from each symbol duration."""
     num_samples = int(symbol_duration * fs)
     symbols = []
     
@@ -62,7 +49,7 @@ def extract_frequencies(audio):
         freqs = np.fft.rfftfreq(len(chunk), 1 / fs)
         dominant_freq = freqs[np.argmax(fft)]
 
-        # Match to the closest frequency
+        # Match to the closest known frequency
         closest_freq = min(freq_map.keys(), key=lambda f: abs(f - dominant_freq))
         symbols.append(freq_map[closest_freq])
 
@@ -75,25 +62,29 @@ def binary_to_text(binary_string):
     return text
 
 def receive_text():
-    """Receives and decodes a transmitted FSK message."""
-    print("🎤 Listening for preamble...")
+    """Receives and decodes a repeated FSK message and reconstructs the original text."""
+    received_messages = collections.Counter()
     
-    # Step 1: Listen for the Preamble
-    audio = record_audio(preamble_duration)
+    print("🎤 Listening for transmissions...")
     
-    if not detect_preamble(audio):
-        print("❌ No preamble detected. Aborting.")
-        return
-    
-    # Step 2: Send ACK to Transmitter
-    send_acknowledgment()
-    
-    # Step 3: Record and Decode Message
-    audio = record_audio(5)  # Record for 5 seconds
-    binary_message = extract_frequencies(audio)
-    text_message = binary_to_text(binary_message)
-    
-    print(f"📩 Received message: {text_message}")
+    for _ in range(5):  # Try receiving multiple times
+        audio = record_audio(preamble_duration)
+        
+        if detect_preamble(audio):
+            audio = record_audio(5)  
+            binary_message = extract_frequencies(audio)
+            text_message = binary_to_text(binary_message)
+            
+            if text_message:
+                received_messages[text_message] += 1
+                print(f"📩 Partial message received: {text_message}")
+
+    # Find the most frequently received message
+    if received_messages:
+        final_message = max(received_messages, key=received_messages.get)
+        print(f"✅ Final decoded message: {final_message}")
+    else:
+        print("❌ No valid message received.")
 
 # Example usage
 receive_text()
