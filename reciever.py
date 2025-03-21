@@ -4,17 +4,18 @@ import collections
 
 # Parameters
 fs = 22050  # Sampling rate
-symbol_duration = 0.15  # Symbol duration
+symbol_duration = 0.2  # Symbol duration
 preamble_duration = 1  # Preamble duration
-preamble_freqs = [400, 600]  # Detectable preamble frequencies
+preamble_freqs = [300, 500]  # Detectable preamble frequencies
+gap_duration = 0.05  # Silence between symbols
 repeated_threshold = 2  # Minimum occurrences for message validity
 
-# FSK Frequency Mapping
+# FSK Frequency Mapping (Same as Transmitter)
 freq_map = {
-    500: '00',
-    700: '01',
-    900: '10',
-    1200: '11'
+    400: '00',
+    500: '01',
+    600: '10',
+    700: '11'
 }
 
 def record_audio(duration):
