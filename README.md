@@ -24,4 +24,4 @@ EchoCrypt is a cutting-edge project that enables **real-time, inaudible communic
 1. **Clone the repository**  
    ```sh
    git clone https://github.com/nav-jk/EchoCrypt-Ultrasonic-Stealth-Messaging.git
-   cd EchoCrypt
+   cd EchoCrypt-Ultrasonic-Stealth-Messaging
